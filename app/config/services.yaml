@@ -1,0 +1,36 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    logs_file_path: '%env(LOGS_FILE_PATH)%'
+    log_entries_read_ahead: '%env(LOG_ENTRIES_READ_AHEAD)%'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\Infrastructure\Adapter\Cli\LogParseCommand:
+        arguments:
+            $readAheadLinesNum: '%log_entries_read_ahead%'
+
+    App\Infrastructure\Adapter\FileSystem\LogsReader:
+        arguments:
+            $filePath: '%logs_file_path%'
+
+    App\Infrastructure\Adapter\FileSystem\LogIteratorState:
+        arguments:
+            $tmpDirPath: '%kernel.project_dir%/var/'
+            $logFilePath: '%logs_file_path%'
